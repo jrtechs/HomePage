@@ -1,0 +1,6 @@
+{
+  "port": 9000,
+  "clientID": "fit bit client id",
+  "clientSecret": "super secret",
+  "callbackURL": "https://jrtechs.student.rit.edu/auth/fitbit/callback"
+}
