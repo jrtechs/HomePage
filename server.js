@@ -73,23 +73,71 @@ app.get('/error', (request, result) =>
 });
 
 
-app.get('/', (request, result) =>
+const queryAPI = function(result, path)
 {
-    if(accessTokenTemp == null)
+    return new Promise((resolve, reject)=>
     {
-        result.redirect('/auth/fitbit');
-    }
-
-    unirest.get('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json')
-        .headers({'Accept': 'application/json', 'Content-Type': 'application/json', Authorization: "Bearer " +  accessTokenTemp})
-        .end(function (response)
+        if(accessTokenTemp == null)
         {
-            // result.write(response.body);
+            result.redirect('/auth/fitbit');
+            resolve(false);
+        }
+
+        unirest.get(path)
+            .headers({'Accept': 'application/json', 'Content-Type': 'application/json', Authorization: "Bearer " +  accessTokenTemp})
+            .end(function (response)
+            {
+                if(response.hasOwnProperty("success") && response.success == false)
+                {
+                    result.redirect('/auth/fitbit');
+                    resolve(false);
+                }
+                resolve(response.body);
+            });
+    });
+};
+
+app.get('/steps', (request, result)=>
+{
+    queryAPI(result, 'https://api.fitbit.com/1/user/-/activities/tracker/steps/date/today/1m.json').then((data)=>
+    {
+        if(data != false)
+        {
+            result.writeHead(200, {'Content-Type': 'text/html'});
+            result.write(JSON.stringify(data));
             result.end();
-            console.log(response.body);
-        });
+        }
+        else
+        {
+            console.log("Validating with API");
+        }
+    });
 });
 
-app.listen(PORT, () =>
+app.get('/activities', (request, result)=>
+{
+    queryAPI(result, 'https://api.fitbit.com/1/user/-/activities/date/1M.json').then((data)=>
+    {
+        if(data != false)
+        {
+            result.writeHead(200, {'Content-Type': 'text/html'});
+            result.write(JSON.stringify(data));
+            result.end();
+        }
+        else
+        {
+            console.log("Validating with API");
+        }
+    });
+});
+
+
+app.get('/', (request, result) =>
+{
+    result.write(utils.getFile("index.html"));
+    result.end();
+});
+
+app.listen(config.port, () =>
     console.log(`App listening on port ${config.port}!`)
 );
