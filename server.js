@@ -141,3 +141,5 @@ app.get('/', (request, result) =>
 app.listen(config.port, () =>
     console.log(`App listening on port ${config.port}!`)
 );
+
+app.use(express.static('public'));
