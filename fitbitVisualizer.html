@@ -15,8 +15,14 @@
     <div class="container">
         <div class="row">
             <div class="col-4 shadow-lg p-3 bg-white rounded">
+                <label>Heart Rate JSON Files</label>
                 <input type="file" id="files" name="files[]" multiple />
                 <output id="list"></output>
+            </div>
+            <div class="col-4 shadow-lg p-3 bg-white rounded">
+                <label>Activity Files</label>
+                <input type="file" id="actFiles" name="files[]" multiple />
+                <output id="actList"></output>
             </div>
         </div>
 
@@ -60,40 +66,69 @@
         }
 
 
+        function generateTimeline(jsonFiles)
+        {
+            console.log(jsonFiles);
+        }
+
+
+        function fetchFilesAsJSONArray(evt)
+        {
+            return new Promise((res, rej)=>
+            {
+                var files = evt.target.files; // FileList object
+
+                var promises = [];
+
+                for (var i = 0, f; f = files[i]; i++)
+                {
+                    promises.push(new Promise((resolve, reject)=>
+                    {
+                        var reader = new FileReader();
+
+                        reader.onload = function(e)
+                        {
+                            resolve(JSON.parse(reader.result));
+                        };
+
+                        reader.onerror= function(e)
+                        {
+                            reject(e);
+                        };
+                        reader.readAsBinaryString(files[i]);
+                    }));
+                }
+                Promise.all(promises).then((data)=>
+                {
+                    res(data);
+                }).catch((error)=>
+                {
+                    console.log(error);
+                    console.log("Unable to Load Data");
+                    rej(error);
+                })
+            });
+        }
+
+
         function handleFileSelect(evt)
         {
-            var files = evt.target.files; // FileList object
-
-            var promises = [];
-
-            for (var i = 0, f; f = files[i]; i++)
-            {
-                promises.push(new Promise((resolve, reject)=>
-                {
-                    var reader = new FileReader();
-
-                    reader.onload = function(e)
-                    {
-                        resolve(JSON.parse(reader.result));
-                    };
-
-                    reader.onerror= function(e)
-                    {
-                        reject(e);
-                    };
-                    reader.readAsBinaryString(files[i]);
-                }));
-            }
-            Promise.all(promises).then((data)=>
+            fetchFilesAsJSONArray(evt).then((data)=>
             {
                 generateHeartRateGraph(data);
-            }).catch((error)=>
-            {
-                console.log(error);
-                console.log("Unable to Load Data");
             })
         }
         document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+
+        function handleFileSelectEvents(evt)
+        {
+            fetchFilesAsJSONArray(evt).then((data)=>
+            {
+                generateTimeline(data);
+            })
+        }
+        document.getElementById('actFiles').addEventListener('change', handleFileSelectEvents, false);
     </script>
 </footer>
 
