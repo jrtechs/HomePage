@@ -31,27 +31,6 @@
 
         function generateHeartRateGraph(jsonFiles)
         {
-            /*
-            var container = document.getElementById('heartRateGraph');
-            var items = [
-                {x: '2014-06-11', y: 10},
-                {x: '2014-06-12', y: 25},
-                {x: '2014-06-13', y: 30},
-                {x: '2014-06-14', y: 10},
-                {x: '2014-06-15', y: 15},
-                {x: '2014-06-16', y: 30}
-            ];
-
-            var dataset = new vis.DataSet(items);
-            var options = {
-                start: '2014-06-10',
-                end: '2014-06-18'
-            };
-            var graph2d = new vis.Graph2d(container, dataset, options);
-*/
-
-            console.log(jsonFiles);
-
             var items = [];
 
             for(var i = 0; i < jsonFiles.length; i++)
@@ -59,11 +38,11 @@
                 console.log(jsonFiles[i].length);
                 for(var j = 0; j < jsonFiles[i].length; j++)
                 {
-                    //console.log(jsonFiles[i][j]);
-                    items.push({y:jsonFiles[i][j].value.bpm, x:jsonFiles[i][j].dateTime})
-
+                    var localTime = new Date(jsonFiles[i][j].dateTime);
+                    items.push({y:jsonFiles[i][j].value.bpm, x:localTime.setHours(localTime.getHours() - 4)});
                 }
             }
+            console.log("Finished Loading Heart Rate Data Into Graph");
 
             var dataset = new vis.DataSet(items);
             var options = {
@@ -78,8 +57,6 @@
             };
             var container = document.getElementById("heartRateGraph");
             var graph2d = new vis.Graph2d(container, dataset, options);
-
-            console.log(items);
         }
 
 
@@ -87,18 +64,10 @@
         {
             var files = evt.target.files; // FileList object
 
-            // files is a FileList of File objects. List some properties.
-            var output = [];
-
             var promises = [];
 
             for (var i = 0, f; f = files[i]; i++)
             {
-                output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
-                    f.size, ' bytes, last modified: ',
-                    f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-                    '</li>');
-
                 promises.push(new Promise((resolve, reject)=>
                 {
                     var reader = new FileReader();
@@ -112,15 +81,9 @@
                     {
                         reject(e);
                     };
-
                     reader.readAsBinaryString(files[i]);
-                    //console.log(f);
-
                 }));
             }
-            document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
-
-
             Promise.all(promises).then((data)=>
             {
                 generateHeartRateGraph(data);
@@ -130,7 +93,6 @@
                 console.log("Unable to Load Data");
             })
         }
-
         document.getElementById('files').addEventListener('change', handleFileSelect, false);
     </script>
 </footer>
