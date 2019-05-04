@@ -49,7 +49,7 @@
                 }
             }
             console.log("Finished Loading Heart Rate Data Into Graph");
-
+            console.log(items);
             var dataset = new vis.DataSet(items);
             var options = {
                 dataAxis: {
@@ -63,14 +63,70 @@
             };
             var container = document.getElementById("heartRateGraph");
             var graph2d = new vis.Graph2d(container, dataset, options);
+            graph2d.on('rangechanged', graphMoved);
+            graphsOnPage.push(graph2d);
         }
 
 
         function generateTimeline(jsonFiles)
         {
-            console.log(jsonFiles);
+            var items = [];
+
+            for(var i = 0; i < jsonFiles.length; i++)
+            {
+                for(var j = 0; j < jsonFiles[i].length; j++)
+                {
+                    if(jsonFiles[i][j].hasOwnProperty("dateOfSleep"))
+                    {
+                        var startT = new Date(jsonFiles[i][j].startTime);
+                        var finishT = new Date(jsonFiles[i][j].endTime);
+                        items.push({content: "Sleep",
+                            start:startT, end:finishT, group:0});
+                    }
+                    else
+                    {
+                        var localTime = new Date(jsonFiles[i][j].startTime);
+                        var timeAdjusted = localTime.setHours(localTime.getHours() - 4);
+                        var timeFinish = localTime.setMilliseconds(localTime.getMilliseconds() + jsonFiles[i][j].activeDuration);
+                        items.push({content: jsonFiles[i][j].activityName,
+                            start:timeAdjusted, end:timeFinish, group:0});
+                    }
+               }
+            }
+            console.log("Finished Loading Heart Rate Data Into Graph");
+
+            var dataset = new vis.DataSet(items);
+            var options =
+            {
+                margin:
+                    {
+                        item:20,
+                        axis:40
+                    },
+                showCurrentTime: false
+            };
+
+            var grpups = new vis.DataSet([
+                {id: 0, content:"Activity", value:0}
+            ]);
+
+            var container = document.getElementById("heartRateGraph");
+            var graph2d = new vis.Timeline(container, dataset, options);
+            graph2d.setGroups(grpups);
+            graph2d.on('rangechanged', graphMoved);
+            graphsOnPage.push(graph2d);
         }
 
+        var graphsOnPage = [];
+
+
+        function graphMoved(moveEvent)
+        {
+            graphsOnPage.forEach((g)=>
+            {
+                g.setWindow(moveEvent.start, moveEvent.end);
+            })
+        }
 
         function fetchFilesAsJSONArray(evt)
         {
