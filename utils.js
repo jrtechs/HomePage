@@ -16,5 +16,20 @@ module.exports=
         getFile: function(filename)
         {
             return fs.readFileSync(filename,  'utf8');
+        },
+
+        saveFile: function(filename, contents)
+        {
+            fs.writeFile(filename, contents, function(err)
+            {
+                if(err)
+                {
+                    console.log(err);
+                }
+                else
+                {
+                    console.log(filename + " saved");
+                }
+            });
         }
     };
